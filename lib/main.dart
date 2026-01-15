@@ -1,6 +1,11 @@
+import 'dart:nativewrappers/_internal/vm/lib/ffi_patch.dart';
 import 'package:flutter/material.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk_auth.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk_talk.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk_template.dart';
 
 void main() {
+  KakaoSdk.init(nativeAppKey: "3dc713bb7ef9a725e05831a456dda70a");
   runApp(const MyApp());
 }
 
@@ -56,13 +61,19 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  void _incrementCounter() {
+  void _incrementCounter() async {
+    // 카카오톡 설치여부 확인
+    bool isInstalled = await isKakaoTalkInstalled();
+    print(isInstalled); // 버튼을 눌러보면 false가 나올 것. 시뮬레이터에서는 카카오를 설치할 수 없기 때문!
+    // 로그인 하시겠습니까? 창이 뜸. 로그인하기
+    OAuthToken token = isInstalled
+        ? await UserApi.instance.loginWithKakaoTalk()
+        : await UserApi.instance.loginWithKakaoAccount();
+    // 콘솔창 확인. 발급받은 상자가 무엇인지
+    // 중간에 반드시 점. 이 2개 있음. JWT 문자열
+    print(token.idToken);
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
       _counter++;
     });
   }
