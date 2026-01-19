@@ -1,10 +1,13 @@
-import 'dart:nativewrappers/_internal/vm/lib/ffi_patch.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk_auth.dart';
+import 'package:flutter_kakao_login/firebase_options.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_talk.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk_template.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   KakaoSdk.init(nativeAppKey: "3dc713bb7ef9a725e05831a456dda70a");
   runApp(const MyApp());
 }
@@ -43,15 +46,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -72,6 +66,20 @@ class _MyHomePageState extends State<MyHomePage> {
     // 콘솔창 확인. 발급받은 상자가 무엇인지
     // 중간에 반드시 점. 이 2개 있음. JWT 문자열
     print(token.idToken);
+    // 1. 카카오에서 발급 받은 상자 파이어베이스에서 사용되는 객체로 감싸기
+    // 파이어베이스 로그인 제공업체 눌러서 아이디
+    OAuthProvider oAthP = OAuthProvider("oidc.oidc-kakao");
+    OAuthCredential credential = oAthP.credential(
+      // 파이어베이스에서 받을 수 있는 객체 형태로 반환된다
+      accessToken: token.accessToken,
+      idToken: token.idToken,
+    );
+
+    // 2. 로그인 시키기
+    UserCredential userCred = await FirebaseAuth.instance.signInWithCredential(
+      credential,
+    );
+    print(await userCred.user?.getIdToken());
 
     setState(() {
       _counter++;
